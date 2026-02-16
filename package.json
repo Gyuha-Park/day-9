@@ -1,0 +1,10 @@
+{
+    "name": "day-8-chat-box",
+    "version": "1.0.0",
+    "description": "AI Emotion Diary",
+    "main": "api/analyze.js",
+    "dependencies": {
+        "@supabase/supabase-js": "^2.95.3",
+        "ioredis": "^5.3.2"
+    }
+}
