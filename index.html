@@ -86,16 +86,44 @@
                 </section>
 
                 <section class="chat-section">
-                    <h2 class="section-title">실시간 채팅</h2>
+                    <div class="chat-header-container">
+                        <h2 class="section-title">실시간 채팅</h2>
+                        <div class="chat-profile-section">
+                            <div class="profile-display-area" id="profile-trigger">
+                                <img id="chat-profile-img" src="" alt="Profile" class="hidden">
+                                <div id="chat-profile-default" class="profile-default-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path fill-rule="evenodd"
+                                            d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <input type="file" id="profile-file-input" accept="image/*" hidden>
+                            <button id="change-photo-btn" class="text-btn small-btn">사진 변경</button>
+                        </div>
+                    </div>
                     <div class="chat-wrapper">
                         <div id="chat-messages" class="chat-messages">
                             <!-- 메시지가 여기에 표시됩니다 -->
                             <div class="chat-placeholder">채팅을 불러오는 중...</div>
                         </div>
                         <form id="chat-form" class="chat-input-area">
-                            <input type="text" id="chat-input" placeholder="메시지를 입력하세요..." required autocomplete="off">
-                            <button type="submit" id="chat-send-btn" class="primary-btn chat-btn">
-                                <span>전송</span>
+                            <input type="file" id="chat-image-input" accept="image/*" hidden>
+                            <input type="text" id="chat-input" placeholder="메시지를 입력하세요..." autocomplete="off">
+                            <button type="button" id="chat-attach-btn" class="icon-btn" title="이미지 첨부">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M18.97 3.659a2.25 2.25 0 00-3.182 0l-10.94 10.94a3.75 3.75 0 105.304 5.303l7.693-7.693a.75.75 0 011.06 1.06l-7.693 7.693a5.25 5.25 0 11-7.424-7.424l10.939-10.94a3.75 3.75 0 115.303 5.304L9.097 18.835l-.008.008-.006.007-.002.002-.003.002A2.25 2.25 0 015.91 15.66l7.81-7.81a.75.75 0 011.061 1.06l-7.81 7.81a.75.75 0 001.054 1.068L18.97 6.84a2.25 2.25 0 000-3.182z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button type="submit" id="chat-send-btn" class="primary-btn chat-btn icon-only-btn"
+                                title="전송">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                                </svg>
                             </button>
                         </form>
                     </div>

@@ -57,7 +57,8 @@ export default async function handler(request, response) {
                     {
                         user_id: user.id,
                         user_email: user.email,
-                        content: content.trim()
+                        content: content.trim(),
+                        avatar_url: user.user_metadata?.avatar_url || null
                     }
                 ])
                 .select();

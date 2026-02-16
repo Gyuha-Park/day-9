@@ -31,7 +31,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     const chatSendBtn = document.getElementById('chat-send-btn');
+    const chatImageInput = document.getElementById('chat-image-input');
+    const chatAttachBtn = document.getElementById('chat-attach-btn');
     let chatChannel = null;
+
+    // Profile Elements
+    const profileTrigger = document.getElementById('profile-trigger');
+    const profileFileInput = document.getElementById('profile-file-input');
+    const changePhotoBtn = document.getElementById('change-photo-btn');
+    const chatProfileImg = document.getElementById('chat-profile-img');
+    const chatProfileDefault = document.getElementById('chat-profile-default');
 
     // --- Helper Functions ---
     // (Must be defined before they are used in updateAuthUI)
@@ -124,11 +133,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderChatMessages(messages, session.user.email);
         } catch (error) {
             console.error('Error fetching chat messages:', error);
+            chatMessages.innerHTML = '<div class="chat-placeholder">메시지를 불러오지 못했습니다.</div>';
         }
     };
 
     const renderChatMessages = (messages, userEmail) => {
-        if (messages.length === 0) {
+        if (!messages || messages.length === 0) {
             chatMessages.innerHTML = '<div class="chat-placeholder">아직 메시지가 없습니다. 첫 대화를 시작해보세요!</div>';
             return;
         }
@@ -136,12 +146,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatMessages.innerHTML = messages.map(msg => {
             const isMine = msg.user_email === userEmail;
             const senderName = isMine ? '나' : (msg.user_email ? msg.user_email.split('@')[0] : '익명');
-            const messageClass = isMine ? 'message-mine' : 'message-others';
+
+            const avatarHtml = msg.avatar_url
+                ? `<img src="${msg.avatar_url}" class="chat-avatar" alt="profile" onerror="this.onerror=null; this.src='https://via.placeholder.com/32?text=?'">`
+                : `<div class="chat-avatar-default">
+                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                   </div>`;
+
+            // Check for image message format ![image](url)
+            let contentHtml = msg.content;
+            const imageMatch = msg.content.match(/^!\[image\]\((.+)\)$/);
+
+            if (imageMatch) {
+                const imageUrl = imageMatch[1];
+                contentHtml = `<img src="${imageUrl}" class="chat-image" alt="첨부 이미지" onerror="this.outerHTML='<div class=\\'chat-image-error\\'>⚠️ 이미지 로드 실패</div>'">`;
+            } else {
+                // Escape HTML to prevent XSS for text messages
+                const div = document.createElement('div');
+                div.textContent = msg.content;
+                contentHtml = div.innerHTML;
+            }
 
             return `
-                <div class="message ${messageClass}">
-                    <span class="message-sender">${senderName}</span>
-                    <div class="message-content">${msg.content}</div>
+                <div class="message-row ${isMine ? 'row-mine' : 'row-others'}">
+                    ${!isMine ? avatarHtml : ''}
+                    <div class="message-bubble ${isMine ? 'message-mine' : 'message-others'}">
+                        <span class="message-sender">${senderName}</span>
+                        <div class="message-content">${contentHtml}</div>
+                    </div>
+                    ${isMine ? avatarHtml : ''}
                 </div>
             `;
         }).join('');
@@ -151,6 +184,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const addMessageToChat = (msg, userEmail) => {
+        // Prevent duplicate messages
+        if (msg.id && document.querySelector(`.message-row[data-message-id="${msg.id}"]`)) {
+            return;
+        }
+
         // Remove placeholder if exists
         const placeholder = chatMessages.querySelector('.chat-placeholder');
         if (placeholder) {
@@ -159,16 +197,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const isMine = msg.user_email === userEmail;
         const senderName = isMine ? '나' : (msg.user_email ? msg.user_email.split('@')[0] : '익명');
-        const messageClass = isMine ? 'message-mine' : 'message-others';
 
-        const messageEl = document.createElement('div');
-        messageEl.className = `message ${messageClass}`;
-        messageEl.innerHTML = `
-            <span class="message-sender">${senderName}</span>
-            <div class="message-content">${msg.content}</div>
+        const avatarHtml = msg.avatar_url
+            ? `<img src="${msg.avatar_url}" class="chat-avatar" alt="profile" onerror="this.onerror=null; this.src='https://via.placeholder.com/32?text=?'">`
+            : `<div class="chat-avatar-default">
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+               </div>`;
+
+        // Check for image message format ![image](url)
+        let contentHtml = msg.content;
+        const imageMatch = msg.content.match(/^!\[image\]\((.+)\)$/);
+
+        if (imageMatch) {
+            const imageUrl = imageMatch[1];
+            contentHtml = `<img src="${imageUrl}" class="chat-image" alt="첨부 이미지" onerror="this.outerHTML='<div class=\\'chat-image-error\\'>⚠️ 이미지 로드 실패</div>'">`;
+        } else {
+            // Escape HTML to prevent XSS for text messages
+            const div = document.createElement('div');
+            div.textContent = msg.content;
+            contentHtml = div.innerHTML;
+        }
+
+        const messageRow = document.createElement('div');
+        messageRow.className = `message-row ${isMine ? 'row-mine' : 'row-others'}`;
+        if (msg.id) messageRow.dataset.messageId = msg.id;
+
+        messageRow.innerHTML = `
+            ${!isMine ? avatarHtml : ''}
+            <div class="message-bubble ${isMine ? 'message-mine' : 'message-others'}">
+                <span class="message-sender">${senderName}</span>
+                <div class="message-content">${contentHtml}</div>
+            </div>
+            ${isMine ? avatarHtml : ''}
         `;
 
-        chatMessages.appendChild(messageEl);
+        chatMessages.appendChild(messageRow);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     };
 
@@ -184,7 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Create new channel and subscribe to INSERT events
         chatChannel = supabaseClient
-            .channel('messages')
+            .channel('public:messages')
             .on(
                 'postgres_changes',
                 {
@@ -193,12 +256,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     table: 'messages'
                 },
                 (payload) => {
-                    console.log('New message received:', payload);
-                    addMessageToChat(payload.new, session.user.email);
+                    console.log('Real-time message received:', payload);
+                    if (payload.new) {
+                        addMessageToChat(payload.new, session.user.email);
+                    }
                 }
             )
             .subscribe((status) => {
                 console.log('Realtime subscription status:', status);
+                if (status === 'SUBSCRIBED') {
+                    console.log('Successfully subscribed to messages table');
+                }
             });
 
         // Load existing messages
@@ -241,10 +309,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 throw new Error(errorData.error || '메시지 전송 실패');
             }
 
+            const responseData = await response.json();
+
+            // Immediate UI update for better UX
+            if (responseData.message) {
+                addMessageToChat(responseData.message, session.user.email);
+            }
+
             // Clear input on success
             chatInput.value = '';
 
-            // No need to manually refresh - real-time subscription will handle it
+            // Real-time subscription will handle duplicate check via ID
 
         } catch (error) {
             console.error('Error sending message:', error);
@@ -257,6 +332,154 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Chat Event Listeners
     chatForm.addEventListener('submit', sendChatMessage);
+
+    // Chat Attachment Listeners
+    chatAttachBtn.addEventListener('click', () => chatImageInput.click());
+
+    chatImageInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
+
+            chatAttachBtn.disabled = true; // Prevent double click
+            // Visual feedback (optional)
+            chatAttachBtn.style.opacity = '0.5';
+
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${session.user.id}/${Date.now()}_chat.${fileExt}`;
+
+            // 1. Upload to 'chat-images' bucket
+            const { error: uploadError } = await supabaseClient.storage
+                .from('chat-images')
+                .upload(fileName, file);
+
+            if (uploadError) throw uploadError;
+
+            // 2. Get Public URL
+            const { data: { publicUrl } } = supabaseClient.storage
+                .from('chat-images')
+                .getPublicUrl(fileName);
+
+            // 3. Send message with special format ![image](url)
+            const content = `![image](${publicUrl})`;
+
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ content })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || '이미지 전송 실패');
+            }
+
+            const responseData = await response.json();
+
+            // Immediate UI update
+            if (responseData.message) {
+                addMessageToChat(responseData.message, session.user.email);
+            }
+
+            // Clear input
+            chatImageInput.value = '';
+
+        } catch (error) {
+            console.error('Error sending image:', error);
+            alert('이미지 전송 실패: ' + error.message);
+        } finally {
+            chatAttachBtn.disabled = false;
+            chatAttachBtn.style.opacity = '1';
+        }
+    });
+
+    // Profile Event Listeners
+    profileTrigger.addEventListener('click', () => profileFileInput.click());
+    changePhotoBtn.addEventListener('click', () => profileFileInput.click());
+
+    profileFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // 1. Image Preview (Immediate Feedback)
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            chatProfileImg.src = e.target.result;
+            chatProfileImg.classList.remove('hidden');
+            chatProfileDefault.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+
+        // 2. Upload to Supabase Storage
+        try {
+            changePhotoBtn.disabled = true;
+            changePhotoBtn.textContent = '업로드 중...';
+
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) throw new Error('로그인이 필요합니다.');
+
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+            // Upload
+            const { error: uploadError } = await supabaseClient.storage
+                .from('avatars')
+                .upload(fileName, file, {
+                    upsert: true
+                });
+
+            if (uploadError) throw uploadError;
+
+            // Get Public URL
+            const { data: { publicUrl } } = supabaseClient.storage
+                .from('avatars')
+                .getPublicUrl(fileName);
+
+            // Update Auth User Metadata
+            const { error: updateError } = await supabaseClient.auth.updateUser({
+                data: { avatar_url: publicUrl }
+            });
+
+            if (updateError) throw updateError;
+
+            console.log('Profile updated successfully:', publicUrl);
+
+            // 3. Update past messages in DB (Sync with new profile)
+            const { error: msgUpdateError } = await supabaseClient
+                .from('messages')
+                .update({ avatar_url: publicUrl })
+                .eq('user_id', user.id);
+
+            if (msgUpdateError) {
+                console.error('Failed to update past messages avatar:', msgUpdateError);
+            } else {
+                console.log('Past messages avatar updated');
+            }
+
+            // Update visible chat avatars immediately
+            const myAvatars = document.querySelectorAll('.message-row.row-mine .chat-avatar');
+            myAvatars.forEach(img => {
+                img.src = publicUrl;
+            });
+
+        } catch (error) {
+            console.error('Error uploading profile:', error);
+            alert('프로필 변경 실패: ' + error.message);
+            // Revert preview on failure if needed, or just let it stay
+        } finally {
+            changePhotoBtn.disabled = false;
+            changePhotoBtn.textContent = '사진 변경';
+        }
+    });
 
     const loadSavedData = () => {
         // TODO: In the future, this should load from Supabase per user
@@ -285,6 +508,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Set user email
             if (userEmailSpan && session.user && session.user.email) {
                 userEmailSpan.textContent = session.user.email;
+            }
+
+            // Update Profile Image UI
+            if (session?.user?.user_metadata?.avatar_url) {
+                chatProfileImg.src = session.user.user_metadata.avatar_url;
+                chatProfileImg.classList.remove('hidden');
+                chatProfileDefault.classList.add('hidden');
+            } else {
+                chatProfileImg.src = '';
+                chatProfileImg.classList.add('hidden');
+                chatProfileDefault.classList.remove('hidden');
             }
 
             // Load user data when logged in

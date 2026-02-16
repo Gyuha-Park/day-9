@@ -479,7 +479,52 @@ input:focus {
     font-style: italic;
 }
 
-.message {
+/* Chat Messages Layout */
+.message-row {
+    display: flex;
+    align-items: flex-end;
+    /* 아바타를 하단에 정렬 */
+    gap: 8px;
+    width: 100%;
+    animation: slideIn 0.3s ease-out;
+}
+
+.row-mine {
+    justify-content: flex-end;
+}
+
+.row-others {
+    justify-content: flex-start;
+}
+
+.chat-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--glass-border);
+    flex-shrink: 0;
+}
+
+.chat-avatar-default {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.chat-avatar-default svg {
+    width: 18px;
+    height: 18px;
+}
+
+.message-bubble {
     max-width: 70%;
     padding: 10px 16px;
     border-radius: 12px;
@@ -487,7 +532,6 @@ input:focus {
     line-height: 1.5;
     word-wrap: break-word;
     position: relative;
-    animation: slideIn 0.3s ease-out;
 }
 
 @keyframes slideIn {
@@ -503,14 +547,12 @@ input:focus {
 }
 
 .message-mine {
-    align-self: flex-end;
     background: var(--primary-color);
     color: white;
     border-bottom-right-radius: 4px;
 }
 
 .message-others {
-    align-self: flex-start;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid var(--glass-border);
     color: var(--text-main);
@@ -576,4 +618,187 @@ input:focus {
 
 .chat-messages::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.2);
+}
+
+/* Chat Profile Section */
+.chat-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Vertically center */
+    margin-bottom: 20px;
+}
+
+.chat-header-container .section-title {
+    margin-bottom: 0;
+}
+
+.chat-profile-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    /* Gap between image and button */
+}
+
+/* Chat Images */
+.chat-image {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-top: 4px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.chat-image:hover {
+    transform: scale(1.02);
+}
+
+.chat-image-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    color: #fda4af;
+    font-size: 0.85rem;
+}
+
+.profile-display-area {
+    width: 60px;
+    /* Slightly larger for easier click */
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid var(--glass-border);
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.05);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-display-area:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    transform: scale(1.05);
+    /* Subtle zoom */
+}
+
+#chat-profile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Helper to hide elements */
+#chat-profile-img.hidden,
+#chat-profile-default.hidden {
+    display: none !important;
+}
+
+.profile-default-icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+}
+
+.profile-default-icon svg {
+    width: 32px;
+    height: 32px;
+}
+
+.text-btn.small-btn {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-muted);
+    transition: all 0.2s;
+}
+
+.text-btn.small-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    /* Spacing between button and input */
+}
+
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--primary-color);
+}
+
+.icon-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Chat Input Layout Fixes */
+.chat-input-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Control gap between elements */
+}
+
+/* Prevent buttons from stretching */
+.chat-input-area button {
+    flex: 0 0 auto;
+    width: 44px;
+    /* Fixed width for perfect circle */
+    height: 44px;
+    /* Fixed height for perfect circle */
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Override default button styles */
+.chat-input-area .icon-btn {
+    border-radius: 50%;
+    margin-right: 0;
+    /* Remove margin as gap handles it */
+}
+
+/* Ensure input takes remaining space */
+#chat-input {
+    flex: 1 1 auto;
+    /* Grow to fill available space */
+    min-width: 0;
+    /* Prevent overflow */
+    margin: 0;
+    /* Clear margins */
+}
+
+/* Specific style for the send button icon */
+.icon-only-btn svg {
+    width: 20px;
+    height: 20px;
+    transform: translateX(2px);
+    /* Optically center the send icon */
 }
